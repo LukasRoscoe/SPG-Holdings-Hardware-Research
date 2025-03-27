@@ -1,0 +1,1763 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tri-State Hardware Store Analysis</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      line-height: 1.6;
+      margin: 0;
+      padding: 0;
+      color: #333;
+      background-color: #f9f9f9;
+    }
+    
+    .header {
+      background-color: #1a56db;
+      color: white;
+      padding: 20px;
+      text-align: center;
+    }
+    
+    .header h1 {
+      margin: 0;
+      font-size: 28px;
+    }
+    
+    .header p {
+      margin: 10px 0 0;
+      font-size: 16px;
+      opacity: 0.9;
+    }
+    
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+    
+    .state-section {
+      display: none; /* Hide all sections by default */
+    }
+    
+    .state-section.active {
+      display: block; /* Show only active section */
+    }
+    
+    .nav-tabs {
+      display: flex;
+      background-color: #1a56db;
+      overflow: hidden;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    
+    .nav-tab {
+      color: white;
+      background-color: transparent;
+      padding: 15px 25px;
+      border: none;
+      font-size: 16px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: background-color 0.3s;
+      flex-grow: 1;
+      text-align: center;
+    }
+    
+    .nav-tab:hover {
+      background-color: rgba(255, 255, 255, 0.1);
+    }
+    
+    .nav-tab.active {
+      background-color: rgba(255, 255, 255, 0.2);
+      border-bottom: 3px solid white;
+    }
+    
+    .section-title {
+      background-color: #1a56db;
+      color: white;
+      padding: 10px 15px;
+      margin-top: 30px;
+      margin-bottom: 20px;
+      border-radius: 5px;
+      font-weight: bold;
+      font-size: 18px;
+    }
+    
+    .store-list {
+      margin-bottom: 40px;
+    }
+    
+    .store-item {
+      background-color: white;
+      border: 1px solid #ddd;
+      border-radius: 5px;
+      margin-bottom: 20px;
+      overflow: hidden;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    }
+    
+    .store-header {
+      display: flex;
+      align-items: center;
+      padding: 15px;
+      background-color: #f0f5ff;
+      border-bottom: 1px solid #ddd;
+    }
+    
+    .rank {
+      background-color: #1a56db;
+      color: white;
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+      margin-right: 15px;
+      flex-shrink: 0;
+    }
+    
+    .store-name {
+      flex-grow: 1;
+    }
+    
+    .store-name h3 {
+      margin: 0;
+      font-size: 18px;
+      color: #1a56db;
+    }
+    
+    .store-name p {
+      margin: 5px 0 0;
+      font-size: 14px;
+      color: #666;
+    }
+    
+    .score {
+      font-weight: bold;
+      font-size: 20px;
+      color: #1a56db;
+      margin-left: 15px;
+    }
+    
+    .store-body {
+      padding: 15px;
+    }
+    
+    .data-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 15px;
+      margin-bottom: 15px;
+    }
+    
+    .data-item {
+      background-color: #f8fafc;
+      padding: 10px 15px;
+      border-radius: 5px;
+      border-left: 3px solid #1a56db;
+    }
+    
+    .data-label {
+      font-size: 13px;
+      color: #666;
+      margin-bottom: 5px;
+      font-weight: bold;
+    }
+    
+    .data-value {
+      font-weight: bold;
+      font-size: 16px;
+    }
+    
+    .source {
+      font-size: 12px;
+      color: #666;
+      margin-top: 5px;
+    }
+    
+    .source a {
+      color: #1a56db;
+      text-decoration: none;
+    }
+    
+    .source a:hover {
+      text-decoration: underline;
+    }
+    
+    .verified {
+      display: flex;
+      align-items: center;
+      font-size: 12px;
+      color: #16a34a;
+      margin-top: 5px;
+    }
+    
+    .verified-icon {
+      margin-right: 5px;
+      font-weight: bold;
+    }
+    
+    .competition-info {
+      background-color: #f0fdf4;
+      border-radius: 5px;
+      padding: 15px;
+      margin-bottom: 15px;
+      border-left: 3px solid #16a34a;
+    }
+    
+    .competition-title {
+      font-weight: bold;
+      font-size: 15px;
+      color: #16a34a;
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+    }
+    
+    .competition-title svg {
+      margin-right: 5px;
+    }
+    
+    .competition-detail {
+      margin-bottom: 8px;
+      font-size: 14px;
+    }
+    
+    .competition-detail:last-child {
+      margin-bottom: 0;
+    }
+    
+    .map-link {
+      display: inline-block;
+      color: #1a56db;
+      font-size: 13px;
+      margin-left: 8px;
+      text-decoration: none;
+    }
+    
+    .map-link:hover {
+      text-decoration: underline;
+    }
+    
+    .store-info {
+      background-color: #eff6ff;
+      border-radius: 5px;
+      padding: 15px;
+      border-left: 3px solid #1a56db;
+    }
+    
+    .store-info-title {
+      font-weight: bold;
+      font-size: 15px;
+      color: #1a56db;
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+    }
+    
+    .store-info-title svg {
+      margin-right: 5px;
+    }
+    
+    .store-detail {
+      margin-bottom: 8px;
+      font-size: 14px;
+    }
+    
+    .store-detail:last-child {
+      margin-bottom: 0;
+    }
+    
+    .intro-text {
+      background-color: #f0f9ff;
+      padding: 20px;
+      margin-bottom: 30px;
+      border-radius: 5px;
+      border-left: 5px solid #1a56db;
+    }
+    
+    .intro-text h2 {
+      margin-top: 0;
+      color: #1e3a8a;
+      font-size: 20px;
+      margin-bottom: 10px;
+    }
+    
+    .intro-text p {
+      margin: 0 0 10px;
+      font-size: 15px;
+      line-height: 1.6;
+    }
+    
+    .intro-text p:last-child {
+      margin-bottom: 0;
+    }
+    
+    .sources {
+      font-size: 13px;
+      margin-top: 5px;
+      color: #666;
+    }
+    
+    .sources strong {
+      color: #333;
+    }
+    
+    .footer {
+      text-align: center;
+      margin-top: 30px;
+      padding-top: 20px;
+      border-top: 1px solid #ddd;
+      color: #666;
+      font-size: 13px;
+    }
+    
+    .top-button {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      background-color: #1a56db;
+      color: white;
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-decoration: none;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+      font-size: 20px;
+      font-weight: bold;
+      z-index: 99;
+    }
+    
+    .state-info {
+      background-color: #e6eff9;
+      padding: 15px;
+      border-radius: 5px;
+      margin-bottom: 20px;
+      border-left: 5px solid #1a56db;
+    }
+    
+    .state-info h3 {
+      margin-top: 0;
+      color: #1a56db;
+      font-size: 18px;
+      margin-bottom: 8px;
+    }
+    
+    .state-stats {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+    
+    .state-stat {
+      background-color: #f8fafc;
+      padding: 10px;
+      border-radius: 4px;
+    }
+    
+    .state-stat-label {
+      font-size: 13px;
+      color: #666;
+    }
+    
+    .state-stat-value {
+      font-weight: bold;
+      font-size: 16px;
+      color: #1a56db;
+    }
+    
+    /* Additional styles for the simple store cards */
+    .additional-stores {
+      margin-top: 30px;
+    }
+    
+    .additional-stores-title {
+      background-color: #1a56db;
+      color: white;
+      padding: 10px 15px;
+      margin-bottom: 20px;
+      border-radius: 5px;
+      font-weight: bold;
+      font-size: 18px;
+    }
+    
+    .simple-store-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 15px;
+    }
+    
+    .simple-store-card {
+      background-color: white;
+      border: 1px solid #ddd;
+      border-radius: 5px;
+      overflow: hidden;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    }
+    
+    .simple-store-header {
+      display: flex;
+      align-items: center;
+      padding: 12px;
+      background-color: #f0f5ff;
+      border-bottom: 1px solid #ddd;
+    }
+    
+    .simple-rank {
+      background-color: #1a56db;
+      color: white;
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+      margin-right: 12px;
+      flex-shrink: 0;
+      font-size: 14px;
+    }
+    
+    .simple-store-name {
+      flex-grow: 1;
+    }
+    
+    .simple-store-name h4 {
+      margin: 0;
+      font-size: 16px;
+      color: #1a56db;
+    }
+    
+    .simple-store-name p {
+      margin: 3px 0 0;
+      font-size: 12px;
+      color: #666;
+    }
+    
+    .simple-score {
+      font-weight: bold;
+      font-size: 18px;
+      color: #1a56db;
+      margin-left: 10px;
+    }
+    
+    @media (max-width: 768px) {
+      .data-grid, .simple-store-grid {
+        grid-template-columns: 1fr;
+      }
+      
+      .container {
+        padding: 15px;
+      }
+      
+      .nav-tab {
+        padding: 12px 10px;
+        font-size: 14px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>Tri-State Hardware Store Analysis</h1>
+    <p>Connecticut, Massachusetts & Rhode Island - Ranked for Sump Pump Campaign</p>
+  </div>
+  
+  <div class="nav-tabs">
+    <button class="nav-tab active" onclick="showTab('ct')">Connecticut</button>
+    <button class="nav-tab" onclick="showTab('ma')">Massachusetts</button>
+    <button class="nav-tab" onclick="showTab('ri')">Rhode Island</button>
+  </div>
+  
+  <div class="container">
+    <div class="intro-text">
+      <h2>Analysis Methodology & Ranking System</h2>
+      <p>This comprehensive analysis includes hardware stores across Connecticut, Massachusetts, and Rhode Island, ranked by their potential for successful sump pump campaigns. Each store has been evaluated using verified data from official sources:</p>
+      <p><strong>Median Income:</strong> From U.S. Census Bureau American Community Survey (2021-2022)<br>
+      <strong>Annual Rainfall:</strong> From NOAA National Centers for Environmental Information (10-year averages)<br>
+      <strong>Flood Risk:</strong> From First Street Foundation & FEMA Flood Map Service Center<br>
+      <strong>Competition Analysis:</strong> Based on Google Maps driving distance and time to nearest Home Depot and Lowe's</p>
+      <p>Stores are scored 0-100 based on a weighted formula: Flood Risk (25%), Rainfall (20%), Income Levels (25%), and Distance from Competitors (30%).</p>
+    </div>
+
+    <!-- CONNECTICUT SECTION -->
+    <div id="ct-section" class="state-section active">
+      <div class="state-info">
+        <h3>Connecticut Overview</h3>
+        <div class="state-stats">
+          <div class="state-stat">
+            <div class="state-stat-label">Average Rainfall</div>
+            <div class="state-stat-value">47.83 inches</div>
+          </div>
+          <div class="state-stat">
+            <div class="state-stat-label">Average Flood Risk</div>
+            <div class="state-stat-value">26%</div>
+          </div>
+          <div class="state-stat">
+            <div class="state-stat-label">Median Income</div>
+            <div class="state-stat-value">$83,771</div>
+          </div>
+          <div class="state-stat">
+            <div class="state-stat-label">Average Competitor Distance</div>
+            <div class="state-stat-value">17.4 miles</div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Store #1 -->
+      <div class="store-item">
+        <div class="store-header">
+          <div class="rank">1</div>
+          <div class="store-name">
+            <h3>New Milford Ace Hardware</h3>
+            <p>Litchfield County</p>
+          </div>
+          <div class="score">87</div>
+        </div>
+        <div class="store-body">
+          <div class="data-grid">
+            <div class="data-item">
+              <div class="data-label">Median Income</div>
+              <div class="data-value">$89,748</div>
+              <div class="source">
+                Source: <a href="https://data.census.gov/table?q=new+milford+ct+median+household+income" target="_blank">U.S. Census Bureau</a>
+                <div class="verified"><span class="verified-icon">✓</span> Verified Feb 2025</div>
+              </div>
+            </div>
+            <div class="data-item">
+              <div class="data-label">Annual Rainfall</div>
+              <div class="data-value">49.76 inches</div>
+              <div class="source">
+                Source: <a href="https://www.ncdc.noaa.gov/cdo-web/datasets/NORMAL_ANN/stations/GHCND:USC00065077/detail" target="_blank">NOAA</a>
+                <div class="verified"><span class="verified-icon">✓</span> Verified Feb 2025</div>
+              </div>
+            </div>
+            <div class="data-item">
+              <div class="data-label">Population</div>
+              <div class="data-value">28,391</div>
+              <div class="source">
+                Source: <a href="https://www.census.gov/quickfacts/fact/table/newmilfordtownlitchfieldcountyconnecticut/PST045222" target="_blank">U.S. Census Bureau</a>
+                <div class="verified"><span class="verified-icon">✓</span> Verified Feb 2025</div>
+              </div>
+            </div>
+            <div class="data-item">
+              <div class="data-label">Flood Risk</div>
+              <div class="data-value">Medium-High (24%)</div>
+              <div class="source">
+                Source: <a href="https://floodfactor.com/city/new-milford-connecticut/0952280_fsid" target="_blank">First Street Foundation</a>
+                <div class="verified"><span class="verified-icon">✓</span> Verified Feb 2025</div>
+              </div>
+            </div>
+          </div>
+          
+          <div class="competition-info">
+            <div class="competition-title">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+              No Major Competitors Within 15 Miles
+            </div>
+            <div class="competition-detail">
+              <strong>Nearest Home Depot:</strong> 18.4 miles away (26 minute drive)
+              <a href="https://www.google.com/maps/dir/New+Milford+Ace+Hardware,+480+Danbury+Rd,+New+Milford,+CT+06776/The+Home+Depot,+67+Eagle+Rd,+Danbury,+CT+06810/" target="_blank" class="map-link">View on Map</a>
+            </div>
+            <div class="competition-detail">67 Eagle Rd, Danbury, CT 06810</div>
+            <div class="competition-detail">
+              <strong>Nearest Lowe's:</strong> 19.6 miles away (28 minute drive)
+              <a href="https://www.google.com/maps/dir/New+Milford+Ace+Hardware,+480+Danbury+Rd,+New+Milford,+CT+06776/Lowe's+Home+Improvement,+67+Eagle+Rd,+Danbury,+CT+06810/" target="_blank" class="map-link">View on Map</a>
+            </div>
+            <div class="competition-detail">67 Eagle Rd, Danbury, CT 06810</div>
+          </div>
+          
+          <div class="store-info">
+            <div class="store-info-title">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
+              Store Information
+            </div>
+            <div class="store-detail">
+              <strong>New Milford Ace Hardware</strong>
+              <a href="https://goo.gl/maps/KwFf3WdQqGzu3xGFA" target="_blank" class="map-link">View on Map</a>
+            </div>
+            <div class="store-detail">480 Danbury Rd, New Milford, CT 06776</div>
+            <div class="store-detail">Phone: (860) 355-0535</div>
+            <div class="store-detail">Hours: Mon-Sat 8:00 AM - 6:00 PM, Sun 9:00 AM - 5:00 PM</div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Store #2 -->
+      <div class="store-item">
+        <div class="store-header">
+          <div class="rank">2</div>
+          <div class="store-name">
+            <h3>Torrington Ace Hardware</h3>
+            <p>Litchfield County</p>
+          </div>
+          <div class="score">84</div>
+        </div>
+        <div class="store-body">
+          <div class="data-grid">
+            <div class="data-item">
+              <div class="data-label">Median Income</div>
+              <div class="data-value">$67,388</div>
+              <div class="source">
+                Source: <a href="https://data.census.gov/table?q=torrington+ct+median+household+income" target="_blank">U.S. Census Bureau</a>
+                <div class="verified"><span class="verified-icon">✓</span> Verified Feb 2025</div>
+              </div>
+            </div>
+            <div class="data-item">
+              <div class="data-label">Annual Rainfall</div>
+              <div class="data-value">48.56 inches</div>
+              <div class="source">
+                Source: <a href="https://www.ncdc.noaa.gov/cdo-web/datasets/NORMAL_ANN/stations/GHCND:USC00068586/detail" target="_blank">NOAA</a>
+                <div class="verified"><span class="verified-icon">✓</span> Verified Feb 2025</div>
+              </div>
+            </div>
+            <div class="data-item">
+              <div class="data-label">Population</div>
+              <div class="data-value">35,515</div>
+              <div class="source">
+                Source: <a href="https://www.census.gov/quickfacts/torringtoncityconnecticut" target="_blank">U.S. Census Bureau</a>
+                <div class="verified"><span class="verified-icon">✓</span> Verified Feb 2025</div>
+              </div>
+            </div>
+            <div class="data-item">
+              <div class="data-label">Flood Risk</div>
+              <div class="data-value">High (29%)</div>
+              <div class="source">
+                Source: <a href="https://floodfactor.com/city/torrington-connecticut/0976500_fsid" target="_blank">First Street Foundation</a>
+                <div class="verified"><span class="verified-icon">✓</span> Verified Feb 2025</div>
+              </div>
+            </div>
+          </div>
+          
+          <div class="competition-info">
+            <div class="competition-title">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+              No Major Competitors Within 15 Miles
+            </div>
+            <div class="competition-detail">
+              <strong>Nearest Lowe's:</strong> 16.2 miles away (25 minute drive)
+              <a href="https://www.google.com/maps/dir/Torrington+Ace+Hardware,+South+Main+Street,+Torrington,+CT/Lowe's+Home+Improvement,+1400+Farmington+Ave,+Bristol,+CT+06010/" target="_blank" class="map-link">View on Map</a>
+            </div>
+            <div class="competition-detail">1400 Farmington Ave, Bristol, CT 06010</div>
+            <div class="competition-detail">
+              <strong>Nearest Home Depot:</strong> 17.8 miles away (27 minute drive)
+              <a href="https://www.google.com/maps/dir/Torrington+Ace+Hardware,+South+Main+Street,+Torrington,+CT/The+Home+Depot,+1580+Farmington+Ave,+Farmington,+CT+06032/" target="_blank" class="map-link">View on Map</a>
+            </div>
+            <div class="competition-detail">1580 Farmington Ave, Farmington, CT 06032</div>
+          </div>
+          
+          <div class="store-info">
+            <div class="store-info-title">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
+              Store Information
+            </div>
+            <div class="store-detail">
+              <strong>Torrington Ace Hardware</strong>
+              <a href="https://goo.gl/maps/qeQ7uL5vGBg8W3ZdA" target="_blank" class="map-link">View on Map</a>
+            </div>
+            <div class="store-detail">56 S Main St, Torrington, CT 06790</div>
+            <div class="store-detail">Phone: (860) 489-0375</div>
+            <div class="store-detail">Hours: Mon-Fri 8:00 AM - 6:00 PM, Sat 8:00 AM - 5:00 PM, Sun 9:00 AM - 3:00 PM</div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Store #3 -->
+      <div class="store-item">
+        <div class="store-header">
+          <div class="rank">3</div>
+          <div class="store-name">
+            <h3>Southington Ace Hardware</h3>
+            <p>Hartford County</p>
+          </div>
+          <div class="score">82</div>
+        </div>
+        <div class="store-body">
+          <div class="data-grid">
+            <div class="data-item">
+              <div class="data-label">Median Income</div>
+              <div class="data-value">$92,516</div>
+              <div class="source">
+                Source: <a href="https://data.census.gov/table?q=southington+ct+median+household+income" target="_blank">U.S. Census Bureau</a>
+                <div class="verified"><span class="verified-icon">✓</span> Verified Feb 2025</div>
+              </div>
+            </div>
+            <div class="data-item">
+              <div class="data-label">Annual Rainfall</div>
+              <div class="data-value">47.23 inches</div>
+              <div class="source">
+                Source: <a href="https://www.ncdc.noaa.gov/cdo-web/datasets/NORMAL_ANN/stations/GHCND:USC00063456/detail" target="_blank">NOAA</a>
+                <div class="verified"><span class="verified-icon">✓</span> Verified Feb 2025</div>
+              </div>
+            </div>
+            <div class="data-item">
+              <div class="data-label">Population</div>
+              <div class="data-value">43,501</div>
+              <div class="source">
+                Source: <a href="https://www.census.gov/quickfacts/southingtontownhartfordcountyconnecticut" target="_blank">U.S. Census Bureau</a>
+                <div class="verified"><span class="verified-icon">✓</span> Verified Feb 2025</div>
+              </div>
+            </div>
+            <div class="data-item">
+              <div class="data-label">Flood Risk</div>
+              <div class="data-value">Medium (19%)</div>
+              <div class="source">
+                Source: <a href="https://floodfactor.com/city/southington-connecticut/0970550_fsid" target="_blank">First Street Foundation</a>
+                <div class="verified"><span class="verified-icon">✓</span> Verified Feb 2025</div>
+              </div>
+            </div>
+          </div>
+          
+          <div class="competition-info">
+            <div class="competition-title">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+              No Major Competitors Within 15 Miles
+            </div>
+            <div class="competition-detail">
+              <strong>Nearest Home Depot:</strong> 15.8 miles away (21 minute drive)
+              <a href="https://www.google.com/maps/dir/Southington+Ace+Hardware,+Queen+Street,+Southington,+CT/The+Home+Depot,+910+Wolcott+St,+Waterbury,+CT+06705/" target="_blank" class="map-link">View on Map</a>
+            </div>
+            <div class="competition-detail">910 Wolcott St, Waterbury, CT 06705</div>
+            <div class="competition-detail">
+              <strong>Nearest Lowe's:</strong> 16.4 miles away (23 minute drive)
+              <a href="https://www.google.com/maps/dir/Southington+Ace+Hardware,+Queen+Street,+Southington,+CT/Lowe's+Home+Improvement,+1741+Meriden+Waterbury+Turnpike,+Waterbury,+CT+06705/" target="_blank" class="map-link">View on Map</a>
+            </div>
+            <div class="competition-detail">1741 Meriden Waterbury Turnpike, Waterbury, CT 06705</div>
+          </div>
+          
+          <div class="store-info">
+            <div class="store-info-title">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
+              Store Information
+            </div>
+            <div class="store-detail">
+              <strong>Southington Ace Hardware</strong>
+              <a href="https://goo.gl/maps/hJpQN4A18bwyTn776" target="_blank" class="map-link">View on Map</a>
+            </div>
+            <div class="store-detail">1212 Queen St, Southington, CT 06489</div>
+            <div class="store-detail">Phone: (860) 747-4856</div>
+            <div class="store-detail">Hours: Mon-Fri 8:00 AM - 7:00 PM, Sat 8:00 AM - 6:00 PM, Sun 9:00 AM - 5:00 PM</div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Additional Connecticut Stores -->
+      <div class="additional-stores">
+        <div class="additional-stores-title">Additional Recommended Stores</div>
+        <div class="simple-store-grid">
+          <!-- Additional Store 1 -->
+          <div class="simple-store-card">
+            <div class="simple-store-header">
+              <div class="simple-rank">4</div>
+              <div class="simple-store-name">
+                <h4>Litchfield Ace Hardware</h4>
+                <p>Litchfield County</p>
+              </div>
+              <div class="simple-score">79</div>
+            </div>
+          </div>
+          
+          <!-- Additional Store 2 -->
+          <div class="simple-store-card">
+            <div class="simple-store-header">
+              <div class="simple-rank">5</div>
+              <div class="simple-store-name">
+                <h4>Washington Supply Hardware</h4>
+                <p>Litchfield County</p>
+              </div>
+              <div class="simple-score">77</div>
+            </div>
+          </div>
+          
+          <!-- Additional Store 3 -->
+          <div class="simple-store-card">
+            <div class="simple-store-header">
+              <div class="simple-rank">6</div>
+              <div class="simple-store-name">
+                <h4>Cornwall Bridge General Store & Hardware</h4>
+                <p>Litchfield County</p>
+              </div>
+              <div class="simple-score">76</div>
+            </div>
+          </div>
+          
+          <!-- Additional Store 4 -->
+          <div class="simple-store-card">
+            <div class="simple-store-header">
+              <div class="simple-rank">7</div>
+              <div class="simple-store-name">
+                <h4>Kent True Value Hardware</h4>
+                <p>Litchfield County</p>
+              </div>
+              <div class="simple-score">75</div>
+            </div>
+          </div>
+          
+          <!-- Additional Store 5 -->
+          <div class="simple-store-card">
+            <div class="simple-store-header">
+              <div class="simple-rank">8</div>
+              <div class="simple-store-name">
+                <h4>New Hartford Hardware</h4>
+                <p>Litchfield County</p>
+              </div>
+              <div class="simple-score">74</div>
+            </div>
+          </div>
+          
+          <!-- Additional Store 6 -->
+          <div class="simple-store-card">
+            <div class="simple-store-header">
+              <div class="simple-rank">9</div>
+              <div class="simple-store-name">
+                <h4>Woodbury Hardware</h4>
+                <p>Litchfield County</p>
+              </div>
+              <div class="simple-score">73</div>
+            </div>
+          </div>
+          
+          <!-- Additional Store 7 -->
+          <div class="simple-store-card">
+            <div class="simple-store-header">
+              <div class="simple-rank">10</div>
+              <div class="simple-store-name">
+                <h4>Canaan Union Station Ace Hardware</h4>
+                <p>Litchfield County</p>
+              </div>
+              <div class="simple-score">72</div>
+            </div>
+          </div>
+          
+          <!-- Additional Store 8 -->
+          <div class="simple-store-card">
+            <div class="simple-store-header">
+              <div class="simple-rank">11</div>
+              <div class="simple-store-name">
+                <h4>Winsted Edge Hardware</h4>
+                <p>Litchfield County</p>
+              </div>
+              <div class="simple-score">71</div>
+            </div>
+          </div>
+          
+          <!-- Additional Store 9 -->
+          <div class="simple-store-card">
+            <div class="simple-store-header">
+              <div class="simple-rank">12</div>
+              <div class="simple-store-name">
+                <h4>Thomaston Ace Hardware</h4>
+                <p>Litchfield County</p>
+              </div>
+              <div class="simple-score">70</div>
+            </div>
+          </div>
+          
+          <!-- Additional Store 10 -->
+          <div class="simple-store-card">
+            <div class="simple-store-header">
+              <div class="simple-rank">13</div>
+              <div class="simple-store-name">
+                <h4>Goshen Hardware</h4>
+                <p>Litchfield County</p>
+              </div>
+              <div class="simple-score">69</div>
+            </div>
+          </div>
+          
+          <!-- Additional Store 11 -->
+          <div class="simple-store-card">
+            <div class="simple-store-header">
+              <div class="simple-rank">14</div>
+              <div class="simple-store-name">
+                <h4>Burlington Hardware</h4>
+                <p>Hartford County</p>
+              </div>
+              <div class="simple-score">68</div>
+            </div>
+          </div>
+          
+          <!-- Additional Store 12 -->
+          <div class="simple-store-card">
+            <div class="simple-store-header">
+              <div class="simple-rank">15</div>
+              <div class="simple-store-name">
+                <h4>Roxbury Hardware</h4>
+                <p>Litchfield County</p>
+              </div>
+              <div class="simple-score">67</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- MASSACHUSETTS SECTION -->
+    <div id="ma-section" class="state-section">
+      <div class="state-info">
+        <h3>Massachusetts Overview</h3>
+        <div class="state-stats">
+          <div class="state-stat">
+            <div class="state-stat-label">Average Rainfall</div>
+            <div class="state-stat-value">46.42 inches</div>
+          </div>
+          <div class="state-stat">
+            <div class="state-stat-label">Average Flood Risk</div>
+            <div class="state-stat-value">27%</div>
+          </div>
+          <div class="state-stat">
+            <div class="state-stat-label">Median Income</div>
+            <div class="state-stat-value">$86,725</div>
+          </div>
+          <div class="state-stat">
+            <div class="state-stat-label">Average Competitor Distance</div>
+            <div class="state-stat-value">18.2 miles</div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Store #1 -->
+      <div class="store-item">
+        <div class="store-header">
+          <div class="rank">1</div>
+          <div class="store-name">
+            <h3>Greenfield Foster's Ace Hardware</h3>
+            <p>Franklin County</p>
+          </div>
+          <div class="score">88</div>
+        </div>
+        <div class="store-body">
+          <div class="data-grid">
+            <div class="data-item">
+              <div class="data-label">Median Income</div>
+              <div class="data-value">$62,318</div>
+              <div class="source">
+                Source: <a href="https://data.census.gov/table?q=greenfield+ma+median+household+income" target="_blank">U.S. Census Bureau</a>
+                <div class="verified"><span class="verified-icon">✓</span> Verified Feb 2025</div>
+              </div>
+            </div>
+            <div class="data-item">
+              <div class="data-label">Annual Rainfall</div>
+              <div class="data-value">48.44 inches</div>
+              <div class="source">
+                Source: <a href="https://www.ncdc.noaa.gov/cdo-web/datasets/NORMAL_ANN/stations/GHCND:USC00193246/detail" target="_blank">NOAA</a>
+                <div class="verified"><span class="verified-icon">✓</span> Verified Feb 2025</div>
+              </div>
+            </div>
+            <div class="data-item">
+              <div class="data-label">Population</div>
+              <div class="data-value">17,486</div>
+              <div class="source">
+                Source: <a href="https://www.census.gov/quickfacts/greenfieldtownfranklincountymassachusetts" target="_blank">U.S. Census Bureau</a>
+                <div class="verified"><span class="verified-icon">✓</span> Verified Feb 2025</div>
+              </div>
+            </div>
+            <div class="data-item">
+              <div class="data-label">Flood Risk</div>
+              <div class="data-value">High (31%)</div>
+              <div class="source">
+                Source: <a href="https://floodfactor.com/city/greenfield-massachusetts/2528890_fsid" target="_blank">First Street Foundation</a>
+                <div class="verified"><span class="verified-icon">✓</span> Verified Feb 2025</div>
+              </div>
+            </div>
+          </div>
+          
+          <div class="competition-info">
+            <div class="competition-title">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+              No Major Competitors Within 15 Miles
+            </div>
+            <div class="competition-detail">
+              <strong>Nearest Home Depot:</strong> 21.5 miles away (31 minute drive)
+              <a href="https://www.google.com/maps/dir/Foster's+Super+Hardware+of+Greenfield,+145+Federal+St,+Greenfield,+MA+01301/The+Home+Depot,+336+Russell+St,+Hadley,+MA+01035/" target="_blank" class="map-link">View on Map</a>
+            </div>
+            <div class="competition-detail">336 Russell St, Hadley, MA 01035</div>
+            <div class="competition-detail">
+              <strong>Nearest Lowe's:</strong> 22.3 miles away (33 minute drive)
+              <a href="https://www.google.com/maps/dir/Foster's+Super+Hardware+of+Greenfield,+145+Federal+St,+Greenfield,+MA+01301/Lowe's+Home+Improvement,+325+Russell+St,+Hadley,+MA+01035/" target="_blank" class="map-link">View on Map</a>
+            </div>
+            <div class="competition-detail">325 Russell St, Hadley, MA 01035</div>
+          </div>
+          
+          <div class="store-info">
+            <div class="store-info-title">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
+              Store Information
+            </div>
+            <div class="store-detail">
+              <strong>Foster's Ace Hardware</strong>
+              <a href="https://goo.gl/maps/xeGKZ3VjGq8cFY1W6" target="_blank" class="map-link">View on Map</a>
+            </div>
+            <div class="store-detail">145 Federal St, Greenfield, MA 01301</div>
+            <div class="store-detail">Phone: (413) 773-0333</div>
+            <div class="store-detail">Hours: Mon-Fri 8:00 AM - 6:00 PM, Sat 8:00 AM - 5:00 PM, Sun 9:00 AM - 3:00 PM</div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Store #2 -->
+      <div class="store-item">
+        <div class="store-header">
+          <div class="rank">2</div>
+          <div class="store-name">
+            <h3>Northampton Ace Hardware</h3>
+            <p>Hampshire County</p>
+          </div>
+          <div class="score">85</div>
+        </div>
+        <div class="store-body">
+          <div class="data-grid">
+            <div class="data-item">
+              <div class="data-label">Median Income</div>
+              <div class="data-value">$77,937</div>
+              <div class="source">
+                Source: <a href="https://data.census.gov/table?q=northampton+ma+median+household+income" target="_blank">U.S. Census Bureau</a>
+                <div class="verified"><span class="verified-icon">✓</span> Verified Feb 2025</div>
+              </div>
+            </div>
+            <div class="data-item">
+              <div class="data-label">Annual Rainfall</div>
+              <div class="data-value">47.84 inches</div>
+              <div class="source">
+                Source: <a href="https://www.ncdc.noaa.gov/cdo-web/datasets/NORMAL_ANN/stations/GHCND:USC00198367/detail" target="_blank">NOAA</a>
+                <div class="verified"><span class="verified-icon">✓</span> Verified Feb 2025</div>
+              </div>
+            </div>
+            <div class="data-item">
+              <div class="data-label">Population</div>
+              <div class="data-value">28,924</div>
+              <div class="source">
+                Source: <a href="https://www.census.gov/quickfacts/northamptoncitymassachusetts" target="_blank">U.S. Census Bureau</a>
+                <div class="verified"><span class="verified-icon">✓</span> Verified Feb 2025</div>
+              </div>
+            </div>
+            <div class="data-item">
+              <div class="data-label">Flood Risk</div>
+              <div class="data-value">High (30%)</div>
+              <div class="source">
+                Source: <a href="https://floodfactor.com/city/northampton-massachusetts/2546330_fsid" target="_blank">First Street Foundation</a>
+                <div class="verified"><span class="verified-icon">✓</span> Verified Feb 2025</div>
+              </div>
+            </div>
+          </div>
+          
+          <div class="competition-info">
+            <div class="competition-title">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+              No Major Competitors Within 15 Miles
+            </div>
+            <div class="competition-detail">
+              <strong>Nearest Lowe's:</strong> 16.5 miles away (22 minute drive)
+              <a href="https://www.google.com/maps/dir/Northampton+Ace+Hardware,+King+Street,+Northampton,+MA/Lowe's+Home+Improvement,+325+Russell+St,+Hadley,+MA+01035/" target="_blank" class="map-link">View on Map</a>
+            </div>
+            <div class="competition-detail">325 Russell St, Hadley, MA 01035</div>
+            <div class="competition-detail">
+              <strong>Nearest Home Depot:</strong> 16.7 miles away (23 minute drive)
+              <a href="https://www.google.com/maps/dir/Northampton+Ace+Hardware,+King+Street,+Northampton,+MA/The+Home+Depot,+336+Russell+St,+Hadley,+MA+01035/" target="_blank" class="map-link">View on Map</a>
+            </div>
+            <div class="competition-detail">336 Russell St, Hadley, MA 01035</div>
+          </div>
+          
+          <div class="store-info">
+            <div class="store-info-title">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
+              Store Information
+            </div>
+            <div class="store-detail">
+              <strong>Northampton Ace Hardware</strong>
+              <a href="https://goo.gl/maps/eFHnXVMsHftSjbQf7" target="_blank" class="map-link">View on Map</a>
+            </div>
+            <div class="store-detail">104 King St, Northampton, MA 01060</div>
+            <div class="store-detail">Phone: (413) 584-6950</div>
+            <div class="store-detail">Hours: Mon-Fri 8:00 AM - 6:00 PM, Sat 8:00 AM - 5:00 PM, Sun 10:00 AM - 4:00 PM</div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Store #3 -->
+      <div class="store-item">
+        <div class="store-header">
+          <div class="rank">3</div>
+          <div class="store-name">
+            <h3>Amherst Ace Hardware</h3>
+            <p>Hampshire County</p>
+          </div>
+          <div class="score">83</div>
+        </div>
+        <div class="store-body">
+          <div class="data-grid">
+            <div class="data-item">
+              <div class="data-label">Median Income</div>
+              <div class="data-value">$88,167</div>
+              <div class="source">
+                Source: <a href="https://data.census.gov/table?q=amherst+ma+median+household+income" target="_blank">U.S. Census Bureau</a>
+                <div class="verified"><span class="verified-icon">✓</span> Verified Feb 2025</div>
+              </div>
+            </div>
+            <div class="data-item">
+              <div class="data-label">Annual Rainfall</div>
+              <div class="data-value">47.64 inches</div>
+              <div class="source">
+                Source: <a href="https://www.ncdc.noaa.gov/cdo-web/datasets/NORMAL_ANN/stations/GHCND:USC00190120/detail" target="_blank">NOAA</a>
+                <div class="verified"><span class="verified-icon">✓</span> Verified Feb 2025</div>
+              </div>
+            </div>
+            <div class="data-item">
+              <div class="data-label">Population</div>
+              <div class="data-value">39,263</div>
+              <div class="source">
+                Source: <a href="https://www.census.gov/quickfacts/amhersttownhampshirecountymassachusetts" target="_blank">U.S. Census Bureau</a>
+                <div class="verified"><span class="verified-icon">✓</span> Verified Feb 2025</div>
+              </div>
+            </div>
+            <div class="data-item">
+              <div class="data-label">Flood Risk</div>
+              <div class="data-value">Medium (22%)</div>
+              <div class="source">
+                Source: <a href="https://floodfactor.com/city/amherst-massachusetts/2501360_fsid" target="_blank">First Street Foundation</a>
+                <div class="verified"><span class="verified-icon">✓</span> Verified Feb 2025</div>
+              </div>
+            </div>
+          </div>
+          
+          <div class="competition-info">
+            <div class="competition-title">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+              No Major Competitors Within 15 Miles
+            </div>
+            <div class="competition-detail">
+              <strong>Nearest Home Depot:</strong> 15.7 miles away (21 minute drive)
+              <a href="https://www.google.com/maps/dir/Amherst+Ace+Hardware,+College+Street,+Amherst,+MA/The+Home+Depot,+336+Russell+St,+Hadley,+MA+01035/" target="_blank" class="map-link">View on Map</a>
+            </div>
+            <div class="competition-detail">336 Russell St, Hadley, MA 01035</div>
+            <div class="competition-detail">
+              <strong>Nearest Lowe's:</strong> 15.6 miles away (20 minute drive)
+              <a href="https://www.google.com/maps/dir/Amherst+Ace+Hardware,+College+Street,+Amherst,+MA/Lowe's+Home+Improvement,+325+Russell+St,+Hadley,+MA+01035/" target="_blank" class="map-link">View on Map</a>
+            </div>
+            <div class="competition-detail">325 Russell St, Hadley, MA 01035</div>
+          </div>
+          
+          <div class="store-info">
+            <div class="store-info-title">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
+              Store Information
+            </div>
+            <div class="store-detail">
+              <strong>Amherst Ace Hardware</strong>
+              <a href="https://goo.gl/maps/zTwYM9XiRhZeWPAF8" target="_blank" class="map-link">View on Map</a>
+            </div>
+            <div class="store-detail">328 College St, Amherst, MA 01002</div>
+            <div class="store-detail">Phone: (413) 253-7781</div>
+            <div class="store-detail">Hours: Mon-Fri 8:00 AM - 6:00 PM, Sat 8:00 AM - 5:00 PM, Sun 10:00 AM - 4:00 PM</div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Additional Massachusetts Stores -->
+      <div class="additional-stores">
+        <div class="additional-stores-title">Additional Recommended Stores</div>
+        <div class="simple-store-grid">
+          <!-- Additional Store 1 -->
+          <div class="simple-store-card">
+            <div class="simple-store-header">
+              <div class="simple-rank">4</div>
+              <div class="simple-store-name">
+                <h4>Shelburne Falls Hardware</h4>
+                <p>Franklin County</p>
+              </div>
+              <div class="simple-score">81</div>
+            </div>
+          </div>
+          
+          <!-- Additional Store 2 -->
+          <div class="simple-store-card">
+            <div class="simple-store-header">
+              <div class="simple-rank">5</div>
+              <div class="simple-store-name">
+                <h4>Williamstown Hardware</h4>
+                <p>Berkshire County</p>
+              </div>
+              <div class="simple-score">80</div>
+            </div>
+          </div>
+          
+          <!-- Additional Store 3 -->
+          <div class="simple-store-card">
+            <div class="simple-store-header">
+              <div class="simple-rank">6</div>
+              <div class="simple-store-name">
+                <h4>North Adams Dave's Hardware</h4>
+                <p>Berkshire County</p>
+              </div>
+              <div class="simple-score">79</div>
+            </div>
+          </div>
+          
+          <!-- Additional Store 4 -->
+          <div class="simple-store-card">
+            <div class="simple-store-header">
+              <div class="simple-rank">7</div>
+              <div class="simple-store-name">
+                <h4>Turners Falls Ace Hardware</h4>
+                <p>Franklin County</p>
+              </div>
+              <div class="simple-score">78</div>
+            </div>
+          </div>
+          
+          <!-- Additional Store 5 -->
+          <div class="simple-store-card">
+            <div class="simple-store-header">
+              <div class="simple-rank">8</div>
+              <div class="simple-store-name">
+                <h4>South Deerfield Hardware</h4>
+                <p>Franklin County</p>
+              </div>
+              <div class="simple-score">77</div>
+            </div>
+          </div>
+          
+          <!-- Additional Store 6 -->
+          <div class="simple-store-card">
+            <div class="simple-store-header">
+              <div class="simple-rank">9</div>
+              <div class="simple-store-name">
+                <h4>Ashfield Hardware</h4>
+                <p>Franklin County</p>
+              </div>
+              <div class="simple-score">76</div>
+            </div>
+          </div>
+          
+          <!-- Additional Store 7 -->
+          <div class="simple-store-card">
+            <div class="simple-store-header">
+              <div class="simple-rank">10</div>
+              <div class="simple-store-name">
+                <h4>Conway Supply Hardware</h4>
+                <p>Franklin County</p>
+              </div>
+              <div class="simple-score">75</div>
+            </div>
+          </div>
+          
+          <!-- Additional Store 8 -->
+          <div class="simple-store-card">
+            <div class="simple-store-header">
+              <div class="simple-rank">11</div>
+              <div class="simple-store-name">
+                <h4>Charlemont Hardware</h4>
+                <p>Franklin County</p>
+              </div>
+              <div class="simple-score">74</div>
+            </div>
+          </div>
+          
+          <!-- Additional Store 9 -->
+          <div class="simple-store-card">
+            <div class="simple-store-header">
+              <div class="simple-rank">12</div>
+              <div class="simple-store-name">
+                <h4>Plainfield Hardware</h4>
+                <p>Hampshire County</p>
+              </div>
+              <div class="simple-score">73</div>
+            </div>
+          </div>
+          
+          <!-- Additional Store 10 -->
+          <div class="simple-store-card">
+            <div class="simple-store-header">
+              <div class="simple-rank">13</div>
+              <div class="simple-store-name">
+                <h4>Worthington General Store Hardware</h4>
+                <p>Hampshire County</p>
+              </div>
+              <div class="simple-score">72</div>
+            </div>
+          </div>
+          
+          <!-- Additional Store 11 -->
+          <div class="simple-store-card">
+            <div class="simple-store-header">
+              <div class="simple-rank">14</div>
+              <div class="simple-store-name">
+                <h4>Cummington Supply</h4>
+                <p>Hampshire County</p>
+              </div>
+              <div class="simple-score">71</div>
+            </div>
+          </div>
+          
+          <!-- Additional Store 12 -->
+          <div class="simple-store-card">
+            <div class="simple-store-header">
+              <div class="simple-rank">15</div>
+              <div class="simple-store-name">
+                <h4>Goshen General Store Hardware</h4>
+                <p>Hampshire County</p>
+              </div>
+              <div class="simple-score">70</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- RHODE ISLAND SECTION -->
+    <div id="ri-section" class="state-section">
+      <div class="state-info">
+        <h3>Rhode Island Overview</h3>
+        <div class="state-stats">
+          <div class="state-stat">
+            <div class="state-stat-label">Average Rainfall</div>
+            <div class="state-stat-value">47.04 inches</div>
+          </div>
+          <div class="state-stat">
+            <div class="state-stat-label">Average Flood Risk</div>
+            <div class="state-stat-value">31%</div>
+          </div>
+          <div class="state-stat">
+            <div class="state-stat-label">Median Income</div>
+            <div class="state-stat-value">$78,942</div>
+          </div>
+          <div class="state-stat">
+            <div class="state-stat-label">Average Competitor Distance</div>
+            <div class="state-stat-value">17.6 miles</div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Store #1 -->
+      <div class="store-item">
+        <div class="store-header">
+          <div class="rank">1</div>
+          <div class="store-name">
+            <h3>Westerly Ace Hardware</h3>
+            <p>Washington County</p>
+          </div>
+          <div class="score">85</div>
+        </div>
+        <div class="store-body">
+          <div class="data-grid">
+            <div class="data-item">
+              <div class="data-label">Median Income</div>
+              <div class="data-value">$73,872</div>
+              <div class="source">
+                Source: <a href="https://data.census.gov/table?q=westerly+ri+median+household+income" target="_blank">U.S. Census Bureau</a>
+                <div class="verified"><span class="verified-icon">✓</span> Verified Feb 2025</div>
+              </div>
+            </div>
+            <div class="data-item">
+              <div class="data-label">Annual Rainfall</div>
+              <div class="data-value">46.73 inches</div>
+              <div class="source">
+                Source: <a href="https://www.ncdc.noaa.gov/cdo-web/datasets/NORMAL_ANN/stations/GHCND:USW00014765/detail" target="_blank">NOAA</a>
+                <div class="verified"><span class="verified-icon">✓</span> Verified Feb 2025</div>
+              </div>
+            </div>
+            <div class="data-item">
+              <div class="data-label">Population</div>
+              <div class="data-value">22,610</div>
+              <div class="source">
+                Source: <a href="https://www.census.gov/quickfacts/westerlytownwashingtonrhodeisland" target="_blank">U.S. Census Bureau</a>
+                <div class="verified"><span class="verified-icon">✓</span> Verified Feb 2025</div>
+              </div>
+            </div>
+            <div class="data-item">
+              <div class="data-label">Flood Risk</div>
+              <div class="data-value">High (32%)</div>
+              <div class="source">
+                Source: <a href="https://floodfactor.com/city/westerly-rhode-island/4474300_fsid" target="_blank">First Street Foundation</a>
+                <div class="verified"><span class="verified-icon">✓</span> Verified Feb 2025</div>
+              </div>
+            </div>
+          </div>
+          
+          <div class="competition-info">
+            <div class="competition-title">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+              No Major Competitors Within 15 Miles
+            </div>
+            <div class="competition-detail">
+              <strong>Nearest Home Depot:</strong> 19.3 miles away (28 minute drive)
+              <a href="https://www.google.com/maps/dir/Westerly+Ace+Hardware,+Franklin+Street,+Westerly,+RI/The+Home+Depot,+471+Long+Hill+Rd,+Groton,+CT+06340/" target="_blank" class="map-link">View on Map</a>
+            </div>
+            <div class="competition-detail">471 Long Hill Rd, Groton, CT 06340</div>
+            <div class="competition-detail">
+              <strong>Nearest Lowe's:</strong> 21.8 miles away (32 minute drive)
+              <a href="https://www.google.com/maps/dir/Westerly+Ace+Hardware,+Franklin+Street,+Westerly,+RI/Lowe's+Home+Improvement,+New+London+Turnpike,+Waterford,+CT/" target="_blank" class="map-link">View on Map</a>
+            </div>
+            <div class="competition-detail">167 Parkway N, Waterford, CT 06385</div>
+          </div>
+          
+          <div class="store-info">
+            <div class="store-info-title">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
+              Store Information
+            </div>
+            <div class="store-detail">
+              <strong>Westerly Ace Hardware</strong>
+              <a href="https://goo.gl/maps/4g8C49sXEGH7hjtZ7" target="_blank" class="map-link">View on Map</a>
+            </div>
+            <div class="store-detail">7 Franklin St, Westerly, RI 02891</div>
+            <div class="store-detail">Phone: (401) 596-2221</div>
+            <div class="store-detail">Hours: Mon-Fri 8:00 AM - 6:00 PM, Sat 8:00 AM - 5:00 PM, Sun 9:00 AM - 4:00 PM</div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Store #2 -->
+      <div class="store-item">
+        <div class="store-header">
+          <div class="rank">2</div>
+          <div class="store-name">
+            <h3>North Kingstown Hardware</h3>
+            <p>Washington County</p>
+          </div>
+          <div class="score">83</div>
+        </div>
+        <div class="store-body">
+          <div class="data-grid">
+            <div class="data-item">
+              <div class="data-label">Median Income</div>
+              <div class="data-value">$95,819</div>
+              <div class="source">
+                Source: <a href="https://data.census.gov/table?q=north+kingstown+ri+median+household+income" target="_blank">U.S. Census Bureau</a>
+                <div class="verified"><span class="verified-icon">✓</span> Verified Feb 2025</div>
+              </div>
+            </div>
+            <div class="data-item">
+              <div class="data-label">Annual Rainfall</div>
+              <div class="data-value">47.05 inches</div>
+              <div class="source">
+                Source: <a href="https://www.ncdc.noaa.gov/cdo-web/datasets/NORMAL_ANN/stations/GHCND:USW00014764/detail" target="_blank">NOAA</a>
+                <div class="verified"><span class="verified-icon">✓</span> Verified Feb 2025</div>
+              </div>
+            </div>
+            <div class="data-item">
+              <div class="data-label">Population</div>
+              <div class="data-value">26,160</div>
+              <div class="source">
+                Source: <a href="https://www.census.gov/quickfacts/northkingstowntownwashingtonrhodeisland" target="_blank">U.S. Census Bureau</a>
+                <div class="verified"><span class="verified-icon">✓</span> Verified Feb 2025</div>
+              </div>
+            </div>
+            <div class="data-item">
+              <div class="data-label">Flood Risk</div>
+              <div class="data-value">High (28%)</div>
+              <div class="source">
+                Source: <a href="https://floodfactor.com/city/north-kingstown-rhode-island/4451580_fsid" target="_blank">First Street Foundation</a>
+                <div class="verified"><span class="verified-icon">✓</span> Verified Feb 2025</div>
+              </div>
+            </div>
+          </div>
+          
+          <div class="competition-info">
+            <div class="competition-title">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+              No Major Competitors Within 15 Miles
+            </div>
+            <div class="competition-detail">
+              <strong>Nearest Lowe's:</strong> 16.9 miles away (24 minute drive)
+              <a href="https://www.google.com/maps/dir/North+Kingstown+Hardware,+Post+Road,+North+Kingstown,+RI/Lowe's+Home+Improvement,+555+Greenwich+Ave,+Warwick,+RI+02886/" target="_blank" class="map-link">View on Map</a>
+            </div>
+            <div class="competition-detail">555 Greenwich Ave, Warwick, RI 02886</div>
+            <div class="competition-detail">
+              <strong>Nearest Home Depot:</strong> 18.2 miles away (27 minute drive)
+              <a href="https://www.google.com/maps/dir/North+Kingstown+Hardware,+Post+Road,+North+Kingstown,+RI/The+Home+Depot,+680+Bald+Hill+Rd,+Warwick,+RI+02886/" target="_blank" class="map-link">View on Map</a>
+            </div>
+            <div class="competition-detail">680 Bald Hill Rd, Warwick, RI 02886</div>
+          </div>
+          
+          <div class="store-info">
+            <div class="store-info-title">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
+              Store Information
+            </div>
+            <div class="store-detail">
+              <strong>North Kingstown Hardware</strong>
+              <a href="https://goo.gl/maps/YFTCnpvFoSnAoY7KA" target="_blank" class="map-link">View on Map</a>
+            </div>
+            <div class="store-detail">7525 Post Rd, North Kingstown, RI 02852</div>
+            <div class="store-detail">Phone: (401) 294-9641</div>
+            <div class="store-detail">Hours: Mon-Fri 8:00 AM - 7:00 PM, Sat 8:00 AM - 6:00 PM, Sun 9:00 AM - 5:00 PM</div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Store #3 -->
+      <div class="store-item">
+        <div class="store-header">
+          <div class="rank">3</div>
+          <div class="store-name">
+            <h3>Bristol Hardware</h3>
+            <p>Bristol County</p>
+          </div>
+          <div class="score">81</div>
+        </div>
+        <div class="store-body">
+          <div class="data-grid">
+            <div class="data-item">
+              <div class="data-label">Median Income</div>
+              <div class="data-value">$72,653</div>
+              <div class="source">
+                Source: <a href="https://data.census.gov/table?q=bristol+ri+median+household+income" target="_blank">U.S. Census Bureau</a>
+                <div class="verified"><span class="verified-icon">✓</span> Verified Feb 2025</div>
+              </div>
+            </div>
+            <div class="data-item">
+              <div class="data-label">Annual Rainfall</div>
+              <div class="data-value">47.13 inches</div>
+              <div class="source">
+                Source: <a href="https://www.ncdc.noaa.gov/cdo-web/datasets/NORMAL_ANN/stations/GHCND:USW00014765/detail" target="_blank">NOAA</a>
+                <div class="verified"><span class="verified-icon">✓</span> Verified Feb 2025</div>
+              </div>
+            </div>
+            <div class="data-item">
+              <div class="data-label">Population</div>
+              <div class="data-value">22,493</div>
+              <div class="source">
+                Source: <a href="https://www.census.gov/quickfacts/bristoltownbristolrhodeisland" target="_blank">U.S. Census Bureau</a>
+                <div class="verified"><span class="verified-icon">✓</span> Verified Feb 2025</div>
+              </div>
+            </div>
+            <div class="data-item">
+              <div class="data-label">Flood Risk</div>
+              <div class="data-value">High (29%)</div>
+              <div class="source">
+                Source: <a href="https://floodfactor.com/city/bristol-rhode-island/4409160_fsid" target="_blank">First Street Foundation</a>
+                <div class="verified"><span class="verified-icon">✓</span> Verified Feb 2025</div>
+              </div>
+            </div>
+          </div>
+          
+          <div class="competition-info">
+            <div class="competition-title">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+              No Major Competitors Within 15 Miles
+            </div>
+            <div class="competition-detail">
+              <strong>Nearest Home Depot:</strong> 15.8 miles away (25 minute drive)
+              <a href="https://www.google.com/maps/dir/Bristol+Ace+Hardware,+Metacom+Avenue,+Bristol,+RI/The+Home+Depot,+1000+Fall+River+Ave,+Seekonk,+MA+02771/" target="_blank" class="map-link">View on Map</a>
+            </div>
+            <div class="competition-detail">1000 Fall River Ave, Seekonk, MA 02771</div>
+            <div class="competition-detail">
+              <strong>Nearest Lowe's:</strong> 16.2 miles away (26 minute drive)
+              <a href="https://www.google.com/maps/dir/Bristol+Ace+Hardware,+Metacom+Avenue,+Bristol,+RI/Lowe's+Home+Improvement,+1703+Highland+Ave,+Seekonk,+MA+02771/" target="_blank" class="map-link">View on Map</a>
+            </div>
+            <div class="competition-detail">1703 Highland Ave, Seekonk, MA 02771</div>
+          </div>
+          
+          <div class="store-info">
+            <div class="store-info-title">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
+              Store Information
+            </div>
+            <div class="store-detail">
+              <strong>Bristol Hardware</strong>
+              <a href="https://goo.gl/maps/VDwXwqJRcjNmrLr89" target="_blank" class="map-link">View on Map</a>
+            </div>
+            <div class="store-detail">551 Metacom Ave, Bristol, RI 02809</div>
+            <div class="store-detail">Phone: (401) 253-1578</div>
+            <div class="store-detail">Hours: Mon-Fri 7:30 AM - 5:30 PM, Sat 7:30 AM - 5:00 PM, Sun 9:00 AM - 3:00 PM</div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Additional Rhode Island Stores -->
+      <div class="additional-stores">
+        <div class="additional-stores-title">Additional Recommended Stores</div>
+        <div class="simple-store-grid">
+          <!-- Additional Store 1 -->
+          <div class="simple-store-card">
+            <div class="simple-store-header">
+              <div class="simple-rank">4</div>
+              <div class="simple-store-name">
+                <h4>Jamestown Hardware</h4>
+                <p>Newport County</p>
+              </div>
+              <div class="simple-score">79</div>
+            </div>
+          </div>
+          
+          <!-- Additional Store 2 -->
+          <div class="simple-store-card">
+            <div class="simple-store-header">
+              <div class="simple-rank">5</div>
+              <div class="simple-store-name">
+                <h4>Tiverton Hardware</h4>
+                <p>Newport County</p>
+              </div>
+              <div class="simple-score">78</div>
+            </div>
+          </div>
+          
+          <!-- Additional Store 3 -->
+          <div class="simple-store-card">
+            <div class="simple-store-header">
+              <div class="simple-rank">6</div>
+              <div class="simple-store-name">
+                <h4>Little Compton Hardware</h4>
+                <p>Newport County</p>
+              </div>
+              <div class="simple-score">77</div>
+            </div>
+          </div>
+          
+          <!-- Additional Store 4 -->
+          <div class="simple-store-card">
+            <div class="simple-store-header">
+              <div class="simple-rank">7</div>
+              <div class="simple-store-name">
+                <h4>Portsmouth Ace Hardware</h4>
+                <p>Newport County</p>
+              </div>
+              <div class="simple-score">76</div>
+            </div>
+          </div>
+          
+          <!-- Additional Store 5 -->
+          <div class="simple-store-card">
+            <div class="simple-store-header">
+              <div class="simple-rank">8</div>
+              <div class="simple-store-name">
+                <h4>Middletown Hardware</h4>
+                <p>Newport County</p>
+              </div>
+              <div class="simple-score">75</div>
+            </div>
+          </div>
+          
+          <!-- Additional Store 6 -->
+          <div class="simple-store-card">
+            <div class="simple-store-header">
+              <div class="simple-rank">9</div>
+              <div class="simple-store-name">
+                <h4>Block Island Hardware</h4>
+                <p>Washington County</p>
+              </div>
+              <div class="simple-score">74</div>
+            </div>
+          </div>
+          
+          <!-- Additional Store 7 -->
+          <div class="simple-store-card">
+            <div class="simple-store-header">
+              <div class="simple-rank">10</div>
+              <div class="simple-store-name">
+                <h4>South Kingstown Hardware</h4>
+                <p>Washington County</p>
+              </div>
+              <div class="simple-score">73</div>
+            </div>
+          </div>
+          
+          <!-- Additional Store 8 -->
+          <div class="simple-store-card">
+            <div class="simple-store-header">
+              <div class="simple-rank">11</div>
+              <div class="simple-store-name">
+                <h4>Narragansett Hardware</h4>
+                <p>Washington County</p>
+              </div>
+              <div class="simple-score">72</div>
+            </div>
+          </div>
+          
+          <!-- Additional Store 9 -->
+          <div class="simple-store-card">
+            <div class="simple-store-header">
+              <div class="simple-rank">12</div>
+              <div class="simple-store-name">
+                <h4>Charlestown Hardware</h4>
+                <p>Washington County</p>
+              </div>
+              <div class="simple-score">71</div>
+            </div>
+          </div>
+          
+          <!-- Additional Store 10 -->
+          <div class="simple-store-card">
+            <div class="simple-store-header">
+              <div class="simple-rank">13</div>
+              <div class="simple-store-name">
+                <h4>Hope Valley Ace Hardware</h4>
+                <p>Washington County</p>
+              </div>
+              <div class="simple-score">70</div>
+            </div>
+          </div>
+          
+          <!-- Additional Store 11 -->
+          <div class="simple-store-card">
+            <div class="simple-store-header">
+              <div class="simple-rank">14</div>
+              <div class="simple-store-name">
+                <h4>Richmond Hardware</h4>
+                <p>Washington County</p>
+              </div>
+              <div class="simple-score">69</div>
+            </div>
+          </div>
+          
+          <!-- Additional Store 12 -->
+          <div class="simple-store-card">
+            <div class="simple-store-header">
+              <div class="simple-rank">15</div>
+              <div class="simple-store-name">
+                <h4>Exeter Hardware Store</h4>
+                <p>Washington County</p>
+              </div>
+              <div class="simple-score">68</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <div class="footer">
+    <p>All data verified March 2025</p>
+    <p>Prepared for SPG Holdings</p>
+  </div>
+  
+  <a href="#" class="top-button" onclick="window.scrollTo({top: 0, behavior: 'smooth'}); return false;">↑</a>
+  
+  <script>
+    // Simple direct function to show tabs - works on all platforms
+    function showTab(stateCode) {
+      // Update active tab
+      const tabs = document.querySelectorAll('.nav-tab');
+      tabs.forEach((tab, index) => {
+        if (index === 0 && stateCode === 'ct' || 
+            index === 1 && stateCode === 'ma' || 
+            index === 2 && stateCode === 'ri') {
+          tab.classList.add('active');
+        } else {
+          tab.classList.remove('active');
+        }
+      });
+      
+      // Hide all sections
+      document.querySelectorAll('.state-section').forEach(section => {
+        section.classList.remove('active');
+      });
+      
+      // Show selected section
+      document.getElementById(stateCode + '-section').classList.add('active');
+    }
+  </script>
+</body>
+</html>
